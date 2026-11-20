@@ -1,0 +1,58 @@
+name: FailWF2jobs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  job-1-init:
+    name: Job 1 - Initialize (Succeeds)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run initialization
+        run: echo "Job 1 succeeded at $(date -u)"
+
+  job-2-validate:
+    name: Job 2 - Validate Config (Succeeds)
+    needs: [ job-1-init ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run validation
+        run: echo "Job 2 succeeded at $(date -u)"
+
+  job-3-integration-test:
+    name: Job 3 - Integration Test (Fails)
+    needs: [ job-2-validate ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Execute failing test check
+        run: |
+          echo "Running Job 3 integration check..."
+          echo "Error: Simulated test failure in Job 3."
+          exit 1
+
+  job-4-package:
+    name: Job 4 - Package Artifact (Skipped)
+    needs: [ job-3-integration-test ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Package build
+        run: echo "This step will not run because Job 3 failed."
+
+  job-5-deploy:
+    name: Job 5 - Deploy Release (Skipped)
+    needs: [ job-4-package ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Deploy build
+        run: echo "This step will not run because upstream jobs did not succeed."
