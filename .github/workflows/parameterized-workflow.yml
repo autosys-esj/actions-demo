@@ -1,0 +1,51 @@
+name: Parameterized Workflow Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target deployment environment'
+        required: true
+        default: 'qa'
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+      release_version:
+        description: 'Application build or release tag'
+        required: true
+        default: '1.0.0'
+        type: string
+      dry_run:
+        description: 'Run validation without deploying'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  validate-inputs:
+    name: Job 1 - Validate Parameters
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Print received inputs
+        run: |
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Release Version: ${{ inputs.release_version }}"
+          echo "Dry Run Mode: ${{ inputs.dry_run }}"
+
+  execute-deployment:
+    name: Job 2 - Execute Deployment
+    needs: [ validate-inputs ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run deployment logic
+        run: |
+          if [ "${{ inputs.dry_run }}" == "true" ]; then
+            echo "DRY RUN: Skipping live deployment of v${{ inputs.release_version }} to ${{ inputs.environment }}."
+          else
+            echo "DEPLOYING: Live release v${{ inputs.release_version }} to ${{ inputs.environment }}!"
+          fi
